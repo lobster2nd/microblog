@@ -15,11 +15,21 @@ app = Flask(__name__)
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Twit):
-            return {'id': obj.id, 'body': obj.body, 'author': obj.author, 'comments': obj.comments}
+            return {
+                    'id': obj.id,
+                    'body': obj.body,
+                    'author': obj.author,
+                    'comments': obj.comments,
+                    }
         if isinstance(obj, User):
             return {'_username': obj._username}
         if isinstance(obj, Comment):
-            return {'id': obj.id, 'author': obj.author, 'twit_id': obj.twit_id, 'message': obj.message}
+            return {
+                    'id': obj.id,
+                    'author': obj.author,
+                    'twit_id': obj.twit_id,
+                    'message': obj.message
+                    }
         else:
             return super().default(obj)
 
@@ -36,7 +46,12 @@ def ping():
 def create_twit():
     try:
         twit_json = request.get_json()
-        twit_obj = Twit(twit_json['id'], twit_json['body'], twit_json['author'], twit_json['comments'])
+        twit_obj = Twit(
+                    twit_json['id'],
+                    twit_json['body'],
+                    twit_json['author'],
+                    twit_json['comments'],
+                )
         twit = json.dumps(twit_obj, cls=CustomJSONEncoder)
         twits.append(json.loads(twit))
         return jsonify({'status': 'success'}), 200
@@ -65,14 +80,24 @@ def add_comment(id: str):
         for twit in twits:
             if twit['id'] == id:
                 # Create a new Comment object
-                comment_obj = Comment(comment_json['id'], comment_json['author'], comment_json['message'], id)
+                comment_obj = Comment(
+                                comment_json['id'],
+                                comment_json['author'],
+                                comment_json['message'],
+                                id,
+                            )
                 # Add the comment to the twit's comments list
-                twit['comments'].append(json.loads(json.dumps(comment_obj, cls=CustomJSONEncoder)))
+                twit['comments'].append(
+                    json.loads(json.dumps(comment_obj, cls=CustomJSONEncoder))
+                )
                 return jsonify({'status': 'success'}), 200
 
         return jsonify({'status': 'error', 'message': 'Twit not found'}), 400
     except Exception:
-        return jsonify({'status': 'error', 'message': 'Failed to add comment'}), 400
+        return (
+            jsonify({'status': 'error', 'message': 'Failed to add comment'}),
+            400
+        )
 
 
 @app.route('/twit/<id>/<comment_id>', methods=['DELETE'])
